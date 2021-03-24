@@ -1,51 +1,16 @@
-const router = require("express").Router();
-const Users = require("./users-model.js");
-const { restricted, only } = require("../auth/auth-middleware.js");
+const express = require("express");
+const router = express.Router();
 
-/**
-  [GET] /api/users
+const User = require("./users-model");
+const restricted = require("../middleware/restricted-middleware");
 
-  This endpoint is RESTRICTED: only authenticated clients
-  should have access.
-
-  response:
-  status 200
-  [
-    {
-      "user_id": 1,
-      "username": "bob"
-    }
-  ]
- */
-router.get("/", restricted, (req, res, next) => { // done for you
-  Users.find()
-    .then(users => {
-      res.json(users);
-    })
-    .catch(next);
-});
-
-/**
-  [GET] /api/users/:user_id
-
-  This endpoint is RESTRICTED: only users with role 'admin'
-  should have access.
-
-  response:
-  status 200
-  [
-    {
-      "user_id": 1,
-      "username": "bob"
-    }
-  ]
- */
-router.get("/:user_id", restricted, only('admin'), (req, res, next) => { // done for you
-  Users.findById(req.params.user_id)
-    .then(user => {
-      res.json(user);
-    })
-    .catch(next);
+router.get("/", restricted, async (_, res) => {
+  try {
+    const users = await User.getAll();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json("Server Error");
+  }
 });
 
 module.exports = router;
